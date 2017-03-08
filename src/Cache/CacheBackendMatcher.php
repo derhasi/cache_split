@@ -44,7 +44,9 @@ class CacheBackendMatcher {
   }
 
   /**
-   * @param $cid
+   * Check if the given Cache ID matches the pattern.
+   *
+   * @param string $cid
    *
    * @return bool
    */
@@ -53,7 +55,7 @@ class CacheBackendMatcher {
   }
 
   /**
-   * Filters the given list cids.
+   * Filters the given list of cids.
    *
    * @param array $cids
    *
