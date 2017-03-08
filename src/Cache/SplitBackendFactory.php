@@ -62,6 +62,9 @@ class SplitBackendFactory implements CacheFactoryInterface {
       $collection->add(new CacheBackendMatcher($backend, $config));
     }
 
+    // Set the default backend to be the database.
+    $collection->setDefaultBackend($this->getCacheBackend($bin, ['backend' => 'cache.backend.database']);
+
     return $collection;
   }
 

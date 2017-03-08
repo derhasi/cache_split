@@ -6,6 +6,8 @@
 
 namespace Drupal\cache_split\Cache;
 
+use Drupal\Core\Cache\CacheBackendInterface;
+
 /**
  * Collection for multiple cache backends.
  */
@@ -17,6 +19,11 @@ class CacheBackendMatcherCollection {
   protected $matchers = [];
 
   /**
+   * @var \Drupal\cache_split\Cache\CacheBackendMatcher[]
+   */
+  protected $defaultMatcher;
+
+  /**
    * Adds a CacheBackendMatcher to thecollection.
    *
    * @param \Drupal\cache_split\Cache\CacheBackendMatcher $matcher
@@ -24,6 +31,34 @@ class CacheBackendMatcherCollection {
    */
   public function add(CacheBackendMatcher $matcher) {
     $this->matchers[] = $matcher;
+  }
+
+  /**
+   * Get all matchers of this collection.
+   *
+   * @param bool $include_default
+   *   When set to TRUE (default), the default matcher is appended to the list.
+   *
+   * @return \Drupal\cache_split\Cache\CacheBackendMatcher[]
+   */
+  public function getMatchers($include_default = TRUE) {
+    if ($include_default) {
+      return $this->matchers + [$this->defaultMatcher];
+    }
+    else {
+      return $this->matchers;
+    }
+  }
+
+  /**
+   * Sets a default cache backend for this collection.
+   *
+   * @param \Drupal\Core\Cache\CacheBackendInterface $backend
+   */
+  public function setDefaultBackend(CacheBackendInterface $backend) {
+    $this->defaultMatcher = new CacheBackendMatcher($backend, [
+      'includes' => ['*']
+    ]);
   }
 
   /**
@@ -40,6 +75,12 @@ class CacheBackendMatcherCollection {
         return $matcher;
       }
     }
+    // Fallback to default if one is set.
+    if ($this->defaultMatcher) {
+      return $this->defaultMatcher;
+    }
+    // Otherwise throw an Exception, as this is not intended.
+    throw new \Exception(sprintf('No default matcher available for processing cache id "%s"', $cid));
   }
 
   /**
@@ -95,7 +136,7 @@ class CacheBackendMatcherCollection {
     $rest = $cids;
     // Array to store cache ids that were not processed by the associated call.
     $unprocessed = [];
-    foreach ($this->matchers as $matcher) {
+    foreach ($this->getMatchers() as $matcher) {
       // We only process the associated cache ids with the associated backend.
       $filtered = $matcher->filter($rest);
       $ret = $matcher->call($method, [&$filtered] + $args);
@@ -131,7 +172,7 @@ class CacheBackendMatcherCollection {
   public function callMultipleByKey($items, $method, $args = []) {
     $cids = array_keys($items);
 
-    foreach ($this->matchers as $matcher) {
+    foreach ($this->getMatchers() as $matcher) {
       $filtered = $matcher->filter($cids);
 
       // Do not call the backend for empty set of ids.
@@ -162,7 +203,7 @@ class CacheBackendMatcherCollection {
    *   Variables to pass to the method.
    */
   public function callAll($method, $args = []) {
-    foreach ($this->matchers as $matcher) {
+    foreach ($this->getMatchers() as $matcher) {
       call_user_func_array([$matcher->getBackend(), $method], $args);
     }
   }
