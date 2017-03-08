@@ -47,8 +47,9 @@ class SplitBackendFactory implements CacheFactoryInterface {
    * @return \Drupal\cache_split\Cache\CacheBackendMatcherCollection
    */
   protected function getMatchers($bin) {
+    // When no configuration is given fallback to the default.
     if (empty($this->cache_split_settings[$bin])) {
-      return [];
+      $this->cache_split_settings[$bin] = [];
     }
 
     $collection = new CacheBackendMatcherCollection();
