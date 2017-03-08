@@ -43,7 +43,7 @@ class CacheBackendMatcherCollection {
    */
   public function getMatchers($include_default = TRUE) {
     if ($include_default) {
-      return $this->matchers + [$this->defaultMatcher];
+      return array_merge($this->matchers, [$this->defaultMatcher]);
     }
     else {
       return $this->matchers;
@@ -95,7 +95,7 @@ class CacheBackendMatcherCollection {
    * @return mixed
    */
   public function callSingle($cid, $method, $args = []) {
-    return $this->getMatcher($cid)->call($method, $args);
+    return $this->getMatcher($cid)->call($method, array_merge([$cid], $args));
   }
 
   /**
@@ -139,7 +139,9 @@ class CacheBackendMatcherCollection {
     foreach ($this->getMatchers() as $matcher) {
       // We only process the associated cache ids with the associated backend.
       $filtered = $matcher->filter($rest);
-      $ret = $matcher->call($method, [&$filtered] + $args);
+      // We make sure to pass the filtered array as reference, so we can retrieve
+      // unprocessed items for CacheBackendInterface::getMultiple().
+      $ret = $matcher->call($method, array_merge([&$filtered], $args));
       $unprocessed += $filtered;
       if (is_array($ret)) {
         $return += $ret;
@@ -182,7 +184,7 @@ class CacheBackendMatcherCollection {
 
       // Filters the items by key, being the filtered ids.
       $filtered_items = array_intersect_key($items, array_flip($filtered));
-      $matcher->call($method, [$filtered_items] + $args);
+      $matcher->call($method, array_merge([$filtered_items], $args));
 
       // Only process the rest of the cache ids.
       $cids = array_diff($cids, $filtered);
