@@ -206,7 +206,7 @@ class CacheBackendMatcherCollection {
    */
   public function callAll($method, $args = []) {
     foreach ($this->getMatchers() as $matcher) {
-      call_user_func_array([$matcher->getBackend(), $method], $args);
+      $matcher->call($method, $args);
     }
   }
 }
