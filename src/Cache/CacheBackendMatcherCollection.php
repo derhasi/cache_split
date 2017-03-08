@@ -9,7 +9,6 @@ namespace Drupal\cache_split\Cache;
 /**
  * Collection for multiple cache backends.
  */
-class CacheCacheBackendMatcherCollection {
 class CacheBackendMatcherCollection {
 
   /**
@@ -39,21 +38,28 @@ class CacheBackendMatcherCollection {
   }
 
   public function callMultiple($cids, $method, $args = []) {
+    return $this->callMultipleByRef($cids, $method, $args);
+  }
+
+  public function callMultipleByRef(&$cids, $method, $args = []) {
     $return = [];
     $rest = $cids;
+    $unprocessed = [];
     foreach ($this->matchers as $matcher) {
-      $filtered = $matcher->filter($cids);
-      $ret = $matcher->call($method, [$filtered] + $args);
+      $filtered = $matcher->filter($rest);
+      $ret = $matcher->call($method, [&$filtered] + $args);
+      $unprocessed += $filtered;
       if (is_array($ret)) {
         $return += $ret;
       }
 
       // The rest will be processed by the next matcher.
-      $cids = array_diff($cids, $filtered);
-      if (empty($cids)) {
+      $rest = array_diff($rest, $filtered);
+      if (empty($rest)) {
         break;
       }
     }
+    $cids = $unprocessed;
     return $return;
   }
 

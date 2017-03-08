@@ -39,7 +39,7 @@ class SplitBackend implements CacheBackendInterface {
    * {@inheritdoc}
    */
   public function getMultiple(&$cids, $allow_invalid = FALSE) {
-    return $this->collection->callMultiple($cids, __FUNCTION__, [$allow_invalid]);
+    return $this->collection->callMultipleByRef($cids, __FUNCTION__, [$allow_invalid]);
   }
 
   /**
