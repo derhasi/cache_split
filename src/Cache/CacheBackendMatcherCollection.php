@@ -10,6 +10,7 @@ namespace Drupal\cache_split\Cache;
  * Collection for multiple cache backends.
  */
 class CacheCacheBackendMatcherCollection {
+class CacheBackendMatcherCollection {
 
   /**
    * @var \Drupal\cache_split\Cache\CacheBackendMatcher[]
