@@ -62,6 +62,7 @@ class SplitBackendFactory implements CacheFactoryInterface {
     }
 
     $collection = new CacheBackendMatcherCollection();
+    $has_default = FALSE;
     foreach ($this->cache_split_settings[$bin] as $key => $config) {
       $config += [
         'backend' => $key,
@@ -69,11 +70,25 @@ class SplitBackendFactory implements CacheFactoryInterface {
         'excludes' => [],
       ];
       $backend = $this->getCacheBackend($bin, $config['backend']);
-      $collection->add(new CacheBackendMatcher($backend, $config));
+      $matcher = new CacheBackendMatcher($backend, $config);
+      // In case this is no fallback matcher we can add it to the collection.
+      if (!$matcher->isFallback()) {
+        $collection->add($matcher);
+      }
+      // Otherwise we only set the first fallbac
+      elseif (!$has_default) {
+        $collection->setFallbackMatcher($matcher);
+        $has_default = TRUE;
+        // Any additional matcher will be skipped, as they are defined after the
+        // fallback matcher.
+        break;
+      }
     }
 
-    // Set the default backend to be the database.
-    $collection->setDefaultBackend($this->getCacheBackend($bin, 'cache.backend.database'));
+    // In case no default matcher was configured, we set the database backend.
+    if (!$has_default) {
+      $collection->setFallbackBackend($this->getCacheBackend($bin, 'cache.backend.database'));
+    }
 
     return $collection;
   }

@@ -33,6 +33,11 @@ class CacheBackendMatcher {
    *
    * @param \Drupal\Core\Cache\CacheBackendInterface $backend
    * @param array $config
+   *   The config may contain:
+   *   - includes: array of patterns to use for including cids
+   *   - excludes: array of patterns to use for excluding cids
+   *
+   *   If includes and excludes are empty, anything matches.
    */
   public function __construct(CacheBackendInterface $backend, array $config) {
     // Provide defaults for config.
@@ -46,6 +51,15 @@ class CacheBackendMatcher {
     // Generate regex patterns for the given config.
     $this->include_regex = $this->generateRegex($config['includes']);
     $this->exclude_regex = $this->generateRegex($config['excludes']);
+  }
+
+  /**
+   * Checks if the matcher can be used as default matcher.
+   *
+   * @return bool
+   */
+  public function isFallback() {
+    return $this->include_regex === '' && $this->exclude_regex === '';
   }
 
   /**

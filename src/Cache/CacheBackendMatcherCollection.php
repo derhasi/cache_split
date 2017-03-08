@@ -21,7 +21,7 @@ class CacheBackendMatcherCollection {
   /**
    * @var \Drupal\cache_split\Cache\CacheBackendMatcher[]
    */
-  protected $defaultMatcher;
+  protected $fallbackMatcher;
 
   /**
    * Adds a CacheBackendMatcher to thecollection.
@@ -43,7 +43,7 @@ class CacheBackendMatcherCollection {
    */
   public function getMatchers($include_default = TRUE) {
     if ($include_default) {
-      return array_merge($this->matchers, [$this->defaultMatcher]);
+      return array_merge($this->matchers, [$this->fallbackMatcher]);
     }
     else {
       return $this->matchers;
@@ -51,14 +51,19 @@ class CacheBackendMatcherCollection {
   }
 
   /**
+   * @param \Drupal\cache_split\Cache\CacheBackendMatcher $matcher
+   */
+  public function setFallbackMatcher(CacheBackendMatcher $matcher) {
+    $this->fallbackMatcher = $matcher;
+  }
+
+  /**
    * Sets a default cache backend for this collection.
    *
    * @param \Drupal\Core\Cache\CacheBackendInterface $backend
    */
-  public function setDefaultBackend(CacheBackendInterface $backend) {
-    $this->defaultMatcher = new CacheBackendMatcher($backend, [
-      'includes' => ['*']
-    ]);
+  public function setFallbackBackend(CacheBackendInterface $backend) {
+    $this->setFallbackMatcher(new CacheBackendMatcher($backend, []));
   }
 
   /**
@@ -76,8 +81,8 @@ class CacheBackendMatcherCollection {
       }
     }
     // Fallback to default if one is set.
-    if ($this->defaultMatcher) {
-      return $this->defaultMatcher;
+    if ($this->fallbackMatcher) {
+      return $this->fallbackMatcher;
     }
     // Otherwise throw an Exception, as this is not intended.
     throw new \Exception(sprintf('No default matcher available for processing cache id "%s"', $cid));
