@@ -19,14 +19,14 @@ class CacheBackendMatcher {
   protected $backend;
 
   /**
-   * @var array
+   * @var string
    */
-  protected $includes = [];
+  protected $include_regex = '';
 
   /**
-   * @var array
+   * @var string
    */
-  protected $excludes = [];
+  protected $exclude_regex = '';
 
   /**
    * CacheBackendMatcher constructor.
@@ -42,19 +42,32 @@ class CacheBackendMatcher {
     ];
 
     $this->backend = $backend;
-    $this->includes = $config['includes'];
-    $this->excludes = $config['excludes'];
+
+    // Generate regex patterns for the given config.
+    $this->include_regex = $this->generateRegex($config['includes']);
+    $this->exclude_regex = $this->generateRegex($config['excludes']);
   }
 
   /**
    * Check if the given Cache ID matches the pattern.
    *
    * @param string $cid
+   *   Cache ID to check.
    *
    * @return bool
    */
   public function match($cid) {
-    // @todo
+    // If an include pattern is given and it does not match, it is no match.
+    if ($this->include_regex !== '' && !preg_match($this->include_regex, $cid)) {
+      return FALSE;
+    }
+
+    // If the exclude pattern matches, it does not match either.
+    if ($this->exclude_regex !== '' && preg_match($this->exclude_regex, $cid)) {
+      return FALSE;
+    }
+
+    // Otherwise there was no restriction and we simply pass a match.
     return TRUE;
   }
 
@@ -62,6 +75,7 @@ class CacheBackendMatcher {
    * Filters the given list of cids.
    *
    * @param array $cids
+   *   List of cache IDS.
    *
    * @return array
    */
@@ -73,7 +87,9 @@ class CacheBackendMatcher {
    * Call method of the cache backend with given set of arguments.
    *
    * @param string $method
+   *   Method to call on the cache backend.
    * @param array $args
+   *   Variables to pass to the cache backend.
    *
    * @return mixed
    */
@@ -90,4 +106,36 @@ class CacheBackendMatcher {
     return $this->backend;
   }
 
+  /**
+   * Generate a regex from the pattern array.
+   *
+   * @param array $patterns
+   *   List of cid patterns, maybe using wildcards `*`.
+   *
+   * @return string
+   *   Regular expression to be used to match a cid.
+   *
+   * @see \Drupal\Core\Path\PathMatcher::matchPath()
+   */
+  protected function generateRegex(array $patterns) {
+    if (empty($patterns)) {
+      return '';
+    }
+
+    // Build a multiline string.
+    $patterns = implode(PHP_EOL, $patterns);
+    $to_replace = array(
+      // Replace newlines with a logical 'or'.
+      '/(\r\n?|\n)/',
+      // Quote asterisks.
+      '/\\\\\*/',
+    );
+    $replacements = array(
+      '|',
+      '.*',
+    );
+    $patterns_quoted = preg_quote($patterns, '/');
+    $regex = '/^(' . preg_replace($to_replace, $replacements, $patterns_quoted) . ')$/';
+    return $regex;
+  }
 }
