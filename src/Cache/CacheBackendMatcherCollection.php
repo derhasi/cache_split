@@ -117,6 +117,43 @@ class CacheBackendMatcherCollection {
   }
 
   /**
+   * Call backend method for list of items keyed by cache id.
+   *
+   * @param array $items
+   *   List of data keyed by Cache ID.
+   * @param string $method
+   *   Method to call on the associated cache backend.
+   * @param array $args
+   *   Variables to pass to the associated cache backend.
+   *
+   * @see \Drupal\Core\Cache\CacheBackendInterface::setMultiple()
+   */
+  public function callMultipleByKey($items, $method, $args = []) {
+    $cids = array_keys($items);
+
+    foreach ($this->matchers as $matcher) {
+      $filtered = $matcher->filter($cids);
+
+      // Do not call the backend for empty set of ids.
+      if (empty($filtered)) {
+        continue;
+      }
+
+      // Filters the items by key, being the filtered ids.
+      $filtered_items = array_intersect_key($items, array_flip($filtered));
+      $matcher->call($method, [$filtered_items] + $args);
+
+      // Only process the rest of the cache ids.
+      $cids = array_diff($cids, $filtered);
+
+      // Do not process further if there are no ids anymore
+      if (empty($cids)) {
+        break;
+      }
+    }
+  }
+
+  /**
    * Call all associated cache backends with the same method.
    *
    * @param $method

@@ -49,8 +49,11 @@ class SplitBackend implements CacheBackendInterface {
     return $this->collection->callSingle($cid, __FUNCTION__, [$data, $expire, $tags]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setMultiple(array $items) {
-    // TODO: Implement setMultiple() method.
+    return $this->collection->callMultipleByKey($items, __FUNCTION__);
   }
 
   /**
