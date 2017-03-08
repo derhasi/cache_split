@@ -23,6 +23,11 @@ class SplitBackendFactory implements CacheFactoryInterface {
   protected $cache_split_settings = [];
 
   /**
+   * @var \Drupal\cache_split\Cache\SplitBackend[]
+   */
+  protected $bins;
+
+  /**
    * SplitBackendFactory constructor.
    *
    * @param \Drupal\Core\Site\Settings $settings
@@ -35,8 +40,12 @@ class SplitBackendFactory implements CacheFactoryInterface {
    * {@inheritdoc}
    */
   public function get($bin) {
-    $collection = $this->getMatchers($bin);
-    return new SplitBackend($collection);
+    // Reuse generated backends to avoid reinitializations.
+    if (!isset($this->bins[$bin])) {
+      $collection = $this->getMatchers($bin);
+      $this->bins[$bin] = new SplitBackend($collection);
+    }
+    return $this->bins[$bin];
   }
 
   /**
