@@ -63,17 +63,21 @@ class SplitBackendFactory implements CacheFactoryInterface {
     }
 
     // Set the default backend to be the database.
-    $collection->setDefaultBackend($this->getCacheBackend($bin, ['backend' => 'cache.backend.database']);
+    $collection->setDefaultBackend($this->getCacheBackend($bin, ['backend' => 'cache.backend.database']));
 
     return $collection;
   }
 
   /**
+   * Create cache backend for bin from the given config array.
    *
-   * @param $string bin
+   * @param string $bin
    * @param array $config
+   *   Config array holding key 'backend' to define the service for cache
+   *   backend factory.
    *
    * @return \Drupal\Core\Cache\CacheBackendInterface
+   *
    * @throws \Exception
    */
   protected function getCacheBackend($bin, array $config) {

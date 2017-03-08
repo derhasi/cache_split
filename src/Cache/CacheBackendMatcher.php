@@ -8,6 +8,9 @@ namespace Drupal\cache_split\Cache;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 
+/**
+ * Provides a matcher assoiciatin a Cache Backend with a cache id pattern.
+ */
 class CacheBackendMatcher {
 
   /**
@@ -51,6 +54,7 @@ class CacheBackendMatcher {
    * @return bool
    */
   public function match($cid) {
+    // @todo
     return TRUE;
   }
 
