@@ -58,12 +58,12 @@ class SplitBackendFactory implements CacheFactoryInterface {
         'includes' => [],
         'excludes' => [],
       ];
-      $backend = $this->getCacheBackend($bin, $config);
+      $backend = $this->getCacheBackend($bin, $config['backend']);
       $collection->add(new CacheBackendMatcher($backend, $config));
     }
 
     // Set the default backend to be the database.
-    $collection->setDefaultBackend($this->getCacheBackend($bin, ['backend' => 'cache.backend.database']));
+    $collection->setDefaultBackend($this->getCacheBackend($bin, 'cache.backend.database'));
 
     return $collection;
   }
@@ -72,23 +72,22 @@ class SplitBackendFactory implements CacheFactoryInterface {
    * Create cache backend for bin from the given config array.
    *
    * @param string $bin
-   * @param array $config
-   *   Config array holding key 'backend' to define the service for cache
-   *   backend factory.
+   *   Holds cache bin name to create the backend for.
+   * @param string $backend
+   *   Holds the name of the backend factory service.
    *
    * @return \Drupal\Core\Cache\CacheBackendInterface
+   *   The cache backend initialised for this bin.
    *
    * @throws \Exception
    */
-  protected function getCacheBackend($bin, array $config) {
-    $backend = $this->container->get($config['backend']);
+  protected function getCacheBackend($bin, $backend) {
+    $factory = $this->container->get($backend);
     // Check if we got a cache factory here.
-    if (!$backend instanceof CacheFactoryInterface) {
-      throw new \Exception(sprintf('Services "%s" does not implement CacheFactoryInterface', $config['backend']));
+    if (!$factory instanceof CacheFactoryInterface) {
+      throw new \Exception(sprintf('Services "%s" does not implement CacheFactoryInterface', $backend));
     }
 
-    return $backend->get($bin);
+    return $factory->get($bin);
   }
-
-
 }
