@@ -1,10 +1,11 @@
 # cache_split
 
-A cache backend for Drupal to split cache items in separate backends.
+The module provides a cache backend for Drupal to split cache items of a single bin
+into separate backends.
 
 ## Installation
 
-1. `composer require derhasi/cache_split:dev-master`
+1. Download cache_split module or [add it via composer](https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies)
 2. Enable `cache_split` module (e.g. `drush en cache_split`)
 3. Change the cache backend for your bin (e.g. `render`) in your _settings.php_
 ```php
